@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+streamlit = "*"
+pandas = "*"
+snowflake-connector-python = "*"
+snowflake-snowpark-python = "*"
+
+[dev-packages]
+pytest = "*"
+
+[requires]
+python_version = "3.10.13"
+
+[pipenv]
+install_search_all_sources = true
+
+[scripts]
