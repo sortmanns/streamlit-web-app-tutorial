@@ -9,9 +9,6 @@ pandas = "*"
 snowflake-connector-python = "*"
 snowflake-snowpark-python = "*"
 
-[dev-packages]
-pytest = "*"
-
 [requires]
 python_version = "3.10.13"
 
