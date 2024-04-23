@@ -36,16 +36,10 @@ wir folgende Technologien einsetzen:
 - Snowflake als Datenbank.
 - Python und SciKit Learn für die Machine Learning Komponente.
 
-Nehmen wir für unseren Use Case an, wir wollen vorhersagen, 
-ob ein:e Patient:in potenziell Diabetes hat. Wir wollen für das
-spätere Modell das wohlbekannte Diabetes Dataset vom 
-National Institute of Diabetes and Digestive and Kidney Diseases nehmen. 
-Dementsprechend brauchen wir ein formular in dem die Werte für die Attribute eingetragen werden 
-können. Wichtig hier ist, dass wir die Daten nur anonymisiert abspeichern. 
-Der Nutzer bekommt eine ID zurück, unter der die Daten abgespeichert sind und ist selbst für die
-Zuordnung der ID zu dem entsprechenden Patienten zuständig.
+Im ersten Teil des Blogposts implementieren wir ein Dummy Streamlit App und sichern diese
+mit einem Proxyserver und Propelauth.
 
-## Lokales Streamlit Deployment mit Snowflake als Datenbank
+## 1.1 Lokales Streamlit Deployment mit Snowflake als Datenbank
 Für die lokale Entwicklung setzen zuerst ein Virtual Environment (Venv) mit Pipenv oder
 dem Virtualisierungstool eurer Wahl auf. Dafür legen wir eine Pipfile im 
 Wurzelverzeichnis unseres Projektes an.
@@ -142,7 +136,7 @@ ausführen können.
 pipenv run streamlit run src/streamlit_app/streamlit_app.py
 ```
 
-### Authentifizierung und Nutzermanagement
+### 1.2 Authentifizierung und Nutzermanagement
 Für State-of-the-Art Authentifizierung setzen wir auf einen Proxyserver und Propelauth
 als Identity Provider und Nutzermanagement Tool. Für ein detailliertes Tutorial zu 
 Streamlit und Propelauth verweisen wir auf diesen [Blogpost](todo). Wir werden die einzelnen 
@@ -353,6 +347,23 @@ async function init() {
 
 // Execute the initialization function
 init();
+```
+Zu diesem Zeitpunkt sollte euer Projekt die folgende Struktur haben.
+```
+.
+├── .streamlit
+│   └── secrets.toml
+├── src
+│   ├── .secrets
+│   │   └── propelAuthKey.yaml
+│   ├── proxy
+│   │   └── proxy.mjs
+│   └── streamlit_app
+│       ├── __init__.py
+│       └── streamlit_app.py
+├── .gitignore
+├── Pipfile
+└── Pipfile.lock
 ```
 Führt nun folgende Befehle zum Initialisieren eures Node Projektes aus.
 ```bash
