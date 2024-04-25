@@ -3,6 +3,7 @@ from snowflake.snowpark import functions as F
 from snowflake.snowpark.types import (IntegerType, StringType,
                                       StructField, StructType)
 import yaml
+import uuid
 
 from custom_auth import Auth
 
@@ -23,6 +24,12 @@ if user is None:
     st.error("Unauthorized")
     st.stop()
 
+
+# Function for generating random patient ids
+def generate_id():
+    return str(uuid.uuid4())
+
+
 # Connect to Snowflake
 conn = st.connection('snowflake')
 session = conn.session()
@@ -34,10 +41,12 @@ col1, col2 = st.columns(2)
 
 # Column 1
 with col1:
-    geschlecht = st.selectbox('Geschlecht', ['Male', 'Female', 'n.a.'])
+    gender = st.selectbox('gender', ['Male', 'Female', 'n.a.'])
+    age = st.selectbox('age', [x for x in range(0, 100)])
 # Column 2
 with col2:
-    alter = st.selectbox('Alter', [x for x in range(0, 100)])
+    user = st.selectbox('user', ['mysterious_user'])
+    patient_id = generate_id()
 
 # Customizing the Submit button inside st.form
 with st.form(key='my_form', clear_on_submit=True):
@@ -47,21 +56,35 @@ with st.form(key='my_form', clear_on_submit=True):
     if submit_button:
         # Get form data
         form_data = {
-            'geschlecht': geschlecht,
-            'alter': alter,
+            'gender': gender,
+            'age': age,
+            'user': user,
+            'patient_id': patient_id,
         }
 
         # Define dataframe schema
         schema = StructType([
             StructField('geschlecht', StringType()),
             StructField('alter', IntegerType()),
+            StructField('user', StringType()),
+            StructField('patient_id', StringType()),
         ])
 
+        # Create dataframe from form data
         df = session.createDataFrame(data=[form_data], schema=schema)
 
+        # Add current date to dataframe. Make sure you have the right timezone here, if necessary.
+        df = df.withColumn(
+            'created_at',
+            F.current_date(),
+
+        )
+
+        # Write data to Snowflake
         df.write.mode("append").save_as_table('ingress.input_data')
 
-        # Display the result in the app
+        # Display the result in the app. Show the user the ID for the entry, as we won't store any
+        # data, which can identify the patient.
         st.write('New patients data loaded.')
-        st.dataframe(df.select("id", F.current_date().alias("created_at")))
+        st.dataframe(df.select("*"))
         st.success('Data successfully submitted to Snowflake!')

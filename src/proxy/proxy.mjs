@@ -3,24 +3,27 @@ import yaml from 'js-yaml';
 import { initializeAuthProxy } from '@propelauth/auth-proxy';
 
 // Function to load the API key from a YAML file
-async function loadApiKeyFromYaml(filePath) {
+async function loadCredentialsFromYaml(filePath) {
   try {
     const fileContents = await readFile(filePath, 'utf8');
     const data = yaml.load(fileContents);
-    return data.api_key;
+    return {
+      apiKey: data.api_key,  // Adjust the key names according to your YAML structure
+      authUrl: data.auth_url  // Similarly, adjust if your YAML key is different
+    };
   } catch (e) {
-    console.error('Failed to load API key from YAML', e);
+    console.error('Failed to load credentials from YAML', e);
     throw e;
   }
 }
 
 async function init() {
-  const api_key = await loadApiKeyFromYaml('/Users/sortmanns/git/work/dhac_streamlit_demo/src/.secrets/propelAuthKey.yaml');
+  const credentials = await loadCredentialsFromYaml('/Users/sortmanns/git/work/streamlit-web-app-tutorial/src/.secrets/propelAuthKey.yaml');
 
   // Now initialize your auth proxy with the loaded API key
     await initializeAuthProxy({
-        authUrl: "https://560282212.propelauthtest.com",
-        integrationApiKey: api_key,
+        authUrl: credentials.authUrl,
+        integrationApiKey: credentials.apiKey,
         proxyPort: 8000,
         urlWhereYourProxyIsRunning: 'http://localhost:8000',
         target: {

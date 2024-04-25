@@ -1,5 +1,4 @@
 import requests
-import yaml
 from propelauth_py import UnauthorizedException, init_base_auth
 from streamlit.web.server.websocket_headers import _get_websocket_headers
 
