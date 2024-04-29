@@ -1,4 +1,4 @@
-# Implementierung einer Streamlit KI App mit Nutzermanagement
+# Wie baue ich mit Streamlit eine Webapp für KI gestützte Entscheidungshilfen im Gesundheitswesen?
 In einer Welt, in der die Digitalisierung in allen Lebensbereichen zunehmend 
 an Bedeutung gewinnt, ist das Gesundheitswesen kein Ausnahmefall. 
 Der Einsatz von künstlicher Intelligenz (KI) im Gesundheitswesen verspricht, 
@@ -8,28 +8,27 @@ Fachkräftemangel und Unterfinanzierung.
 Durch die Automatisierung von Routineaufgaben und die Bereitstellung 
 fortschrittlicher Diagnosetools kann KI medizinisches Personal entlasten 
 und die Effizienz steigern. Doch das Entwickeln von Applikationen und das Sammeln von Daten
-ist häufig ein aufwändiges Unterfangen. Dies brachte mich im Rahmen eines Forschungsprojektes 
-in der Augenheilkunde auf die Frage, wie ich als Data Scientist, möglichst kostengünstig 
-und mit wenig Aufwand eine KI App mit einem Mindestmaß an Funktionalität bereitstellen kann.
+ist häufig ein aufwändiges Unterfangen. Dies brachte uns im Rahmen eines nicht profitablen Forschungsprojektes 
+in der Augenheilkunde auf die Frage, wie wir als Data Scientists, möglichst kostengünstig 
+und mit wenig Aufwand eine KI Webapp mit allen nötigen Funktionen einem Mindestmaß an 
+professioneller Sicherheit bereitstellen können.
 </br></br>
-Das ultimative Ziel dieses Blogposts ist die Bereitstellung eines 
-Machine Learning (ML) Modells innerhalb einer Web-App, 
-die nicht nur die Funktionen des Modells zugänglich macht, 
-sondern auch die Sammlung neuer Trainingsdaten ermöglicht. 
-Dies schafft eine Grundlage für kontinuierliches Lernen und Verbesserung 
-der KI-Leistung.
+Das Ziel dieses Blogposts ist die Bereitstellung eines Machine Learning (ML) Modells innerhalb einer Webapp, 
+die nicht nur die Funktionen des Modells zugänglich macht, sondern auch die Sammlung neuer Trainingsdaten ermöglicht. 
+Dies schafft eine Grundlage für kontinuierliches Lernen und Verbesserung der KI-Leistung. 
+Außerdem sollen Authentifikation und Nutzerverwaltung modernen Sicherheitsstandards entsprechen.
 </br></br>
 Um dieses Ziel zu erreichen, haben wir eine Reihe von Anforderungen:
 - Ein einfaches, zweckorientiertes Frontend, das für Nutzer intuitiv zu bedienen und für den Entwickler leicht wartbar ist.
 - Nutzermanagement nach Industriestandards, um eine sichere und regulierte Zugriffssteuerung zu gewährleisten.
-- GDPR-konforme Datenverarbeitung medizinischer Daten, um den Datenschutz und die Sicherheit der Patienteninformationen zu gewährleisten.
+- GDPR-konforme Datenverarbeitung, um den Datenschutz und die Sicherheit der Patienteninformationen zu gewährleisten.
 - Skalierbarkeit und einfache Wartung der Lösung, um zukünftiges Wachstum und Entwicklungen zu unterstützen.
 - Sichere Zugänglichkeit über das öffentliche Internet, um eine breite Nutzbarkeit zu ermöglichen.
 </br></br>
 
-Zur Erfüllung dieser Anforderungen, werden wir einen modernen Techstack einsetzen,
-welcher uns die nötige Flexibilität und Performance bietet. Im Einzelnen werden 
-wir folgende Technologien einsetzen:
+Zur Erfüllung dieser Anforderungen, setzen wir einen modernen Techstack ein,
+welcher uns die nötige Flexibilität und Performance bietet. Im Einzelnen verwenden 
+wir folgende Technologien:
 - Streamlit für einfaches Frontend-Development.
 - Propelauth für Security und Nutzermanagement.
 - Google Cloud Platform (GCP) für ein skalierbares, kostengünstiges Deployment.
@@ -39,17 +38,38 @@ wir folgende Technologien einsetzen:
 - Snowflake als Datenbank.
 - Python und SciKit Learn für die Machine Learning Komponente.
 
-Wir werden uns diesem Ziel in vier Iterationen nähern.
+Wir nähern uns diesem Ziel in vier Iterationen.
 1. Lokales Deployment mit Snowflake als Remote Datenbank
 2. Lokales Docker-Deployment, ebenfalls mit Snowflake als Datenbank
 3. Serverless Cloud Deployment mit GCP und Snowflake
 4. CI/CD und MLOps zum Einbinden eines ML-Modells
 
-## 1.1 Lokales Streamlit Deployment mit Snowflake als Datenbank
-Für die lokale Entwicklung setzen zuerst ein Virtual Environment (Venv) mit Pipenv oder
-dem Virtualisierungstool eurer Wahl auf. Dafür legen wir eine Pipfile im 
-Wurzelverzeichnis unseres Projektes an. Achtet darauf die Abhängigkeiten in der Pipfile
-auf dem Laufenden zu halten.
+## 1. Lokales Deployment mit Snowflake als Datenbank
+Um uns mit den einzelnen Komponenten vertraut zu machen und später schnell iterieren zu können, ist ein 
+lokales Deployment der beste Weg. So könnt ihr euren Code jederzeit testen und Zeit und Geld sparen. Wir beginnen
+mit der Projektstruktur. Ihr könnt die Dateien entweder gleich anlegen und dann später mit Inhalt füllen, oder sie erst im 
+entsprechenden Abschnitt anlegen. Zur Orientierung hier die Struktur von der wir im Folgenden ausgehen.
+```
+.
+├── .streamlit
+│   └── secrets.toml
+├── src
+│   ├── .secrets
+│   │   └── propelAuthKey.yaml
+│   ├── proxy
+│   │   └── proxy.mjs
+│   └── streamlit_app
+│       ├── __init__.py
+│       ├── custom_auth.py
+│       └── streamlit_app.py
+├── .gitignore
+├── Pipfile
+└── Pipfile.lock
+```
+Für die lokale Entwicklung setzen wir zuerst ein Virtual Environment mit Pipenv auf. Eine ausführliche Beschreibung
+wie ihr vorgeht, findet ihr [hier](http://www.rootstrap.com/blog/how-to-manage-your-python-projects-with-pipenv-pyenv). 
+Legt eine Pipfile im Wurzelverzeichnis des Projektes an. 
+Achtet darauf die Abhängigkeiten in der Pipfile im Verlauf des Posts aktuell zu halten.
 ``` [Pipfile]
 [[source]]
 url = "https://pypi.org/simple"
@@ -57,20 +77,22 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-streamlit = "*"
-pandas = "*"
-snowflake-connector-python = "*"
-snowflake-snowpark-python = "*"
+snowflake-connector-python = "==3.8.1"
+snowflake-snowpark-python = "==1.14.0"
+streamlit = "==1.33.0"
+pandas = "==2.2.1"
+propelauth-py = "==3.1.13"
 
 [requires]
 python_version = "3.10.13"
 ```
-Dann können wir unsere Venv mit nur einem Befehl aus dem Terminal anlegen.
+Legt jetzt die virtuelle Umgebung an.
 ```bash
 pipenv install
 ```
-Nun legen wir unser Streamlit Skript an. Für ausführlichere Erklärungen empfehlen wir die 
-[Dokumention](https://docs.streamlit.io/develop/tutorials/databases/snowflake).
+## 1.1 Streamlit und Snowflake
+Wir beginnen mit dem Anlegen des Streamlit Skripts, welches der Haupteinstiegspunkt für unsere Applikation ist. 
+Wir gehen hier nicht auf alle Einzelheiten und für ausführlichere Erklärungen empfehlen wir die [Dokumention](https://docs.streamlit.io/develop/tutorials/databases/snowflake).
 ```python
 import streamlit as st
 from snowflake.snowpark import functions as F
@@ -144,11 +166,11 @@ with st.form(key='my_form', clear_on_submit=True):
 ```
 Die Methode `st.connection('snowflake')` wird in der Wurzel eures Projektes
 unter `.streamlit` nach einer `secrets.toml` suchen. In dieser sollte es dann einen Abschnitt mit
-den Snowflake Credentials geben. Stellt sicher, dass ihr die Credentials nicht ins Remote Repo pusht. Ein weiterer Faktor, der 
-mir zu Beginn Probleme bereitet hat, ist das Erstellen der Patienten ID. Diese muss randomisiert gewählt sein und 
+den Snowflake Credentials geben. Stellt sicher, dass ihr die Credentials nicht ins Remote Repo pusht. Eine potenzielle
+Problemquelle ist das Erstellen der Patienten ID. Diese muss randomisiert gewählt sein und 
 jeder einzelne Eintrag soll eine eigene ID erhalten. Wenn man diese ID allerdings in einem ´with_column´ Statement
-erzeugt, wird diese pro Session persistiert. Um dies zu umgehen, ist es notwendig, dass wir die ID schon im Formular
-erstellen und den ´clear_on_submit´ Parameter auf ´True´ setzen. So wird das Formular nach jedem Submit neu geladen und
+erzeugt, wird diese pro Session persistiert. Um dies zu umgehen, erstellen wir die ID schon im Formular
+und setzen den ´clear_on_submit´ Parameter auf ´True´. So wird das Formular nach jedem Submit neu geladen und
 die ´generate_id´ Funktion erneut ausgeführt.
 ```toml
 [connections.snowflake]
@@ -162,21 +184,21 @@ schema = "..."
 client_session_keep_alive = true
 ```
 Im besten Fall legt euch euer Snowflake Admin einen technischen Nutzer für
-die App an, um das Prinzip der geringsten Privilegien umzusetzen. Legt in Snowflake ein entsprechendes 
-Schema an, für das euer technischer Nutzer die nötigen Rechte hat.
+die App an, um das Prinzip der geringsten Privilegien umzusetzen. Legt in Snowflake ein Schema an, für das euer 
+technischer Nutzer die nötigen Rechte hat.
 </br></br>
-Ihr solltet nun die Streamlit App mit folgendem Befehl aus dem Wurzelverzeichnis ausführen können.
+Startet die Streamlit App jetzt mit folgendem Befehl.
 ```bash
 pipenv run streamlit run src/streamlit_app/streamlit_app.py
 ```
-Probiert mit dem Submit Button Daten in eure Snowflake Tabelle zu schreiben und stellt
-sicher, dass ihr die korrekten Rechte habt.
+Drückt den Submitbutton und stellt sicher, dass eine entsprechende Zeile in die Datenbank geschrieben wurde.
 ### 1.2 Authentifikation und Nutzermanagement
-Für State-of-the-Art Authentifizierung setzen wir auf einen Proxyserver und Propelauth
+Für State-of-the-Art Authentifikation setzen wir auf einen Proxyserver und Propelauth
 als Identity Provider und Nutzermanagement Tool. Für ein detailliertes Tutorial zu 
 Streamlit und Propelauth verweisen wir auf diesen [Blogpost](https://www.propelauth.com/post/streamlit-authentication). Wir werden die einzelnen 
-Schritte hier zusammenfassen und um das Feature erweitern, den API-Key von einer YAML Datei 
-aus einzulesen. 
+Schritte ein wenig zusammenfassen und näher darauf eingehen, den API-Key von einer YAML Datei einzulesen. 
+Dies ermöglicht euch den Key lokal zu speichern, ohne ihn in das Remote Repo zu pushen.
+Außerdem brauchen wir dieses Feature später beim Cloud Deployment.
 </br></br>
 Im ersten Schritt besucht ihr die Propelauth Website und erstellt einen Account. Folgt dann den
 Anweisungen zum Erstellen eines Projektes. Danach initialisiert ihr ein Node Projekt in eurem 
@@ -185,14 +207,13 @@ Wurzelverzeichnis mit dem Befehl
 npm i @propelauth/auth-proxy
 ```
 Als Nächstes legt unter `src` einen Ordner `proxy`an und in diesem eine Datei `proxy.mjs`.
-Anstatt den API-Key hier direkt anzugeben, lesen wir diesen von einer YAML ein. Dies werden wir später
-für ein sicheres Cloud-Deployment brauchen. Legt dazu in eurem `src` Verzeichnis einen Folder 
-`.secrets` an und in diesem eine Datei `propelAuthKey.yaml` mit folgendem Inhalt.
+Anstatt den API-Key hier direkt anzugeben, lesen wir diesen von einer YAML ein. Legt dazu in eurem `src` Verzeichnis 
+einen Ordner `.secrets` an und in diesem eine Datei `propelAuthKey.yaml` mit folgendem Inhalt.
 ```yaml
 api_key: <your-key-here>
 auth_url: <your-url-here>
 ```
-Erweitert eure `proxy.mjs` dann wie folgt.
+Erstellt eure `proxy.mjs` dann wie folgt.
 ```node
 import { initializeAuthProxy } from '@propelauth/auth-proxy';
 import { readFile } from 'fs/promises';
@@ -233,13 +254,8 @@ async function init() {
 // Execute the initialization function
 init();
 ```
-Nun erweitern wir unsere Streamlit App um Methoden zur Authentifizierung. Installiert zuerst das 
-Propelauth Modul in euer Venv. Achtet darauf, dass eure Pipfile auf dem neuesten Stand bleibt.
-```bash
-pip install propelauth_py
-```
-Darauf folgend erstellen wir ein Modul `customs_auth.py`, welches die nötigen Funktionen
-für die Authentifikation bereitstellt.
+Nun erweitern wir unsere Streamlit App um Methoden zur Authentifikation. Dazu nutzen wir das `propelauth_py` Packet.
+Erstellt ein Modul `customs_auth.py` mit den nötigen Funktionen.
 ```python
 import requests
 from propelauth_py import UnauthorizedException, init_base_auth
@@ -305,8 +321,8 @@ def get_cookie(cookie_name):
 
     return None
 ```
-Nun importieren wir die entsprechenden Klassen das Streamlit Skript und lesen die nötigen Credentials
-aus der YAML ein. Dazu fügen wir im oberen Teil des Skripts folgendes ein.
+Nun importiert die entsprechenden Klassen das Streamlit Skript und lest die nötigen Credentials
+aus der YAML ein. Erweitert dazu den oberen Teil des Skripts.
 ```python
 import streamlit as st
 from snowflake.snowpark import functions as F
@@ -338,24 +354,6 @@ conn = st.connection('snowflake')
 session = conn.session()
 ...
 ```
-Zu diesem Zeitpunkt sollte euer Projekt die folgende Struktur haben.
-```
-.
-├── .streamlit
-│   └── secrets.toml
-├── src
-│   ├── .secrets
-│   │   └── propelAuthKey.yaml
-│   ├── proxy
-│   │   └── proxy.mjs
-│   └── streamlit_app
-│       ├── __init__.py
-│       ├── custom_auth.py
-│       └── streamlit_app.py
-├── .gitignore
-├── Pipfile
-└── Pipfile.lock
-```
 Je nachdem wie ihr den Code ausführt, kann es sein, dass ihr den `src` Order zum
 Python Pfad hinzufügen müsst, damit das `custom_auth` Modul gefunden wird.
 Führt nun folgende Befehle zum Initialisieren eures Node Projektes aus.
@@ -363,10 +361,10 @@ Führt nun folgende Befehle zum Initialisieren eures Node Projektes aus.
 npm i @propelauth/auth-proxy
 npm install js-yaml
 ```
-Startet nun eure Streamlit App, wie gewohnt. Ihr solltet jetzt im Browser die Meldung `Unauthorized`
+Startet eure Streamlit App, wie gewohnt. Ihr solltet jetzt im Browser die Meldung `Unauthorized`
 sehen. Öffnet ein zusätzliches Fenster im Terminal und startet euren Node Proxyserver.
 ```bash
 node src/proxy/proxy.mjs
 ```
-Geht jetzt im Browser auf `localhost:8000`. Ihr solltet nun euren Login Screen von Propelauth sehen.
+Geht jetzt im Browser auf `localhost:8000`. Ihr seht nun euren Login Screen von Propelauth.
 Authentifiziert euch, um zu eurer Streamlit App weitergeleitet zu werden.
