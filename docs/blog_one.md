@@ -10,7 +10,7 @@ fortschrittlicher Diagnosetools kann KI medizinisches Personal entlasten
 und die Effizienz steigern. Doch das Entwickeln von Applikationen und das Sammeln von Daten
 ist häufig ein aufwändiges Unterfangen. Dies brachte uns im Rahmen eines wohltätigen Forschungsprojektes 
 in der Augenheilkunde auf die Frage, wie wir als Data Scientists, möglichst kostengünstig 
-und mit wenig Aufwand eine KI Webapp mit allen nötigen Funktionen einem Mindestmaß an 
+und mit wenig Aufwand eine KI Webapp mit allen nötigen Funktionen und einem Mindestmaß an 
 professioneller Sicherheit bereitstellen können.
 </br></br>
 Das Ziel dieses Blogposts ist die Bereitstellung eines Machine Learning (ML) Modells innerhalb einer Webapp, 
@@ -44,7 +44,14 @@ Wir nähern uns diesem Ziel in vier Iterationen.
 3. Serverless Cloud Deployment mit GCP und Snowflake
 4. CI/CD und MLOps zum Einbinden eines ML-Modells
 
+Für jede der vier Iterationen gibt es technische Voraussetzungen, die erfüllt sein müssen. Diese werden jeweils zu 
+Beginn des Kapitels beschrieben.
+
 ## 1. Lokales Deployment mit Snowflake als Datenbank
+Um diese Iteration bearbeiten zu können, braucht ihr:
+1. einen Snowflake Account
+2. einen Propelauth Account
+</br></br>
 Um uns mit den einzelnen Komponenten vertraut zu machen und später schnell iterieren zu können, ist ein 
 lokales Deployment der beste Weg. So könnt ihr euren Code jederzeit testen und Zeit und Geld sparen. Wir beginnen
 mit der Projektstruktur. Ihr könnt die Dateien entweder gleich anlegen und dann später mit Inhalt füllen, oder sie erst im 
