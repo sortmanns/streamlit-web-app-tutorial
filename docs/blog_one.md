@@ -184,7 +184,8 @@ erzeugt, wird diese pro Session persistiert. Um dies zu umgehen, erstellen wir d
 und setzen den `clear_on_submit` Parameter auf `True`. So wird das Formular nach jedem Submit neu geladen und
 die `generate_id` Funktion erneut ausgeführt.
 ```toml
-# secrets.toml
+# .streamlit/secrets.toml
+
 [connections.snowflake]
 account = "..."
 user = "..."
@@ -222,14 +223,14 @@ Als Nächstes legt unter `src` einen Ordner `proxy`an und in diesem eine Datei `
 Anstatt den API-Key hier direkt anzugeben, lesen wir diesen von einer YAML ein. Legt dazu in eurem `src` Verzeichnis 
 einen Ordner `.secrets` an und in diesem eine Datei `propelAuthKey.yaml` mit folgendem Inhalt.
 ```yaml
-# propelAuthKey.yaml
+# src/.secrets/propelAuthKey.yaml
 
 api_key: <your-key-here>
 auth_url: <your-url-here>
 ```
 Erstellt eure `proxy.mjs` dann wie folgt.
 ```node
-// proxy.mjs
+// src/proxy/proxy.mjs
 
 import { initializeAuthProxy } from '@propelauth/auth-proxy';
 import { readFile } from 'fs/promises';
@@ -273,6 +274,8 @@ init();
 Nun erweitern wir unsere Streamlit App um Methoden zur Authentifikation. Dazu nutzen wir das `propelauth_py` Packet.
 Erstellt ein Modul `customs_auth.py` mit den nötigen Funktionen.
 ```python
+# src/streamlit_app/customs_auth.py
+
 import requests
 from propelauth_py import UnauthorizedException, init_base_auth
 from streamlit.web.server.websocket_headers import _get_websocket_headers
@@ -340,6 +343,8 @@ def get_cookie(cookie_name):
 Nun importiert die entsprechenden Klassen das Streamlit Skript und lest die nötigen Credentials
 aus der YAML ein. Erweitert dazu den oberen Teil des Skripts.
 ```python
+# src/streamlit_app/streamlit_app.py
+
 import streamlit as st
 from snowflake.snowpark import functions as F
 from snowflake.snowpark.types import (IntegerType, StringType,
