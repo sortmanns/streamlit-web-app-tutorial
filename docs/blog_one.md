@@ -71,6 +71,8 @@ wie ihr vorgeht, findet ihr [hier](http://www.rootstrap.com/blog/how-to-manage-y
 Legt eine Pipfile im Wurzelverzeichnis des Projektes an. 
 Achtet darauf die Abhängigkeiten in der Pipfile im Verlauf des Posts aktuell zu halten.
 ``` [Pipfile]
+# Pipfile
+
 [[source]]
 url = "https://pypi.org/simple"
 verify_ssl = true
@@ -91,9 +93,11 @@ Legt jetzt die virtuelle Umgebung an.
 pipenv install
 ```
 ## 1.1 Streamlit und Snowflake
-Wir beginnen mit dem Anlegen des Streamlit Skripts, welches der Haupteinstiegspunkt für unsere Applikation ist. 
-Wir gehen hier nicht auf alle Einzelheiten und für ausführlichere Erklärungen empfehlen wir die [Dokumention](https://docs.streamlit.io/develop/tutorials/databases/snowflake).
+Wir beginnen mit dem Anlegen des Streamlit Skripts `streamlit_app.py`, welches der Haupteinstiegspunkt für unsere Applikation ist. 
+Wir gehen hier nicht auf alle Einzelheiten ein. Für ausführlichere Erklärungen empfehlen wir die [Dokumention](https://docs.streamlit.io/develop/tutorials/databases/snowflake).
 ```python
+# src/streamlit_app/streamlit_app.py
+
 import streamlit as st
 from snowflake.snowpark import functions as F
 from snowflake.snowpark.types import (IntegerType, StringType,
