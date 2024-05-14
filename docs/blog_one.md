@@ -52,8 +52,6 @@ Um diese Iteration bearbeiten zu können, braucht ihr:
 1. einen Snowflake Account
 2. einen Propelauth Account
 
-</br></br>
-
 Um uns mit den einzelnen Komponenten vertraut zu machen und später schnell iterieren zu können, ist ein 
 lokales Deployment der beste Weg. So könnt ihr euren Code jederzeit testen und Zeit und Geld sparen. Wir beginnen
 mit der Projektstruktur. Ihr könnt die Dateien entweder gleich anlegen und dann später mit Inhalt füllen, oder sie erst im 
