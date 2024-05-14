@@ -222,11 +222,15 @@ Als Nächstes legt unter `src` einen Ordner `proxy`an und in diesem eine Datei `
 Anstatt den API-Key hier direkt anzugeben, lesen wir diesen von einer YAML ein. Legt dazu in eurem `src` Verzeichnis 
 einen Ordner `.secrets` an und in diesem eine Datei `propelAuthKey.yaml` mit folgendem Inhalt.
 ```yaml
+# propelAuthKey.yaml
+
 api_key: <your-key-here>
 auth_url: <your-url-here>
 ```
 Erstellt eure `proxy.mjs` dann wie folgt.
 ```node
+// proxy.mjs
+
 import { initializeAuthProxy } from '@propelauth/auth-proxy';
 import { readFile } from 'fs/promises';
 import yaml from 'js-yaml';
