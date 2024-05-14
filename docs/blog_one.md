@@ -389,3 +389,129 @@ node src/proxy/proxy.mjs
 ```
 Geht jetzt im Browser auf `localhost:8000`. Ihr seht nun euren Login Screen von Propelauth.
 Authentifiziert euch, um zu eurer Streamlit App weitergeleitet zu werden.
+
+## 2. Lokales Docker Deployment mit Snowflake als Datenbank
+Um diese Iteration bearbeiten zu können, braucht ihr:
+1. einen Snowflake Account
+2. einen Propelauth Account
+3. Docker
+
+Im Wesentlichen erweitern wir unser Repository nur um drei Dateien, die uns ermöglichen unsere App in zwei Docker
+Container zu verpacken. Die Verwendung von pipenv in Docker hilft, Konsistenz zwischen Entwicklungs- und 
+Produktionsumgebungen zu bewahren und nutzt die Vorteile von Docker, während ihr die Funktionen zur Verwaltung von 
+Abhängigkeiten und virtuellen Umgebungen von pipenv genießt.
+
+### 2.1 Erstellen der Dockerfiles
+Zuerst müssen wir die Dockerfiles erstellen, die die Umgebung für unsere Anwendungen definieren. Wir starten mit der
+Dockerfile für die App.
+
+```Dockerfile
+# Dockerfile.app
+
+# Use an official Python runtime as a parent image
+FROM python:3.10-slim
+
+# Copy app code
+COPY src /src
+
+# Set working directory
+WORKDIR /src
+
+# Install pipenv
+RUN pip install pipenv
+
+# Copy the Pipfile and Pipfile.lock into the container at /usr/src/app
+COPY Pipfile Pipfile.lock ./
+
+# Install dependencies using pipenv
+RUN pipenv install --deploy --ignore-pipfile
+
+# Copy the rest of your application's code
+COPY . .
+
+# Expose port you want your app on
+EXPOSE 8501
+
+# Run with multi-stage build considerations (if applicable)
+ENTRYPOINT ["streamlit", "run", "./streamlit_app/streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+```
+
+Als nächstes erstellen wir die Dockerfile für den Proxyserver.
+
+```dockerfile
+# Dockerfile.proxy
+
+# Use the slim version of Node 20 as the base image
+FROM node:20-slim
+
+# Create the application directory and set the ownership to the 'node' user
+RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+
+# Set the working directory inside the container
+WORKDIR /home/node/app
+
+# Copy package.json and package-lock.json (or yarn equivalent) to the working directory
+COPY package*.json ./
+
+# Copy the specific proxy module script into the working directory
+COPY src/proxy/proxy.mjs .
+
+# Copy a specific secret key file into the working directory
+COPY src/.secrets/propelAuthKey.yaml .
+
+# Change permissions of the app directory to make everything accessible
+RUN chmod -R 777 /home/node/app
+
+# Switch to 'node' user for better security (non-root)
+USER node
+
+# Install all dependencies defined in package.json
+RUN npm install
+
+# Install additional dependency js-yaml
+RUN npm install js-yaml
+
+# Copy all other source files to the container and set ownership to 'node' user
+COPY --chown=node:node . .
+
+# Inform Docker that the container listens on port 8000 at runtime
+EXPOSE 8000
+
+# Command to run the proxy application
+CMD [ "node", "proxy.mjs" ]
+```
+Jede Anweisung in der Dockerfile ist darauf ausgelegt, die Umgebung für den Betrieb einer Node.js-Anwendung vorzubereiten, 
+die korrekten Berechtigungen zu gewährleisten und Abhängigkeiten zu verwalten, während der Container durch die Verwendung 
+eines Nicht-Root-Benutzers sicher gehalten wird.
+
+### 2.2. Vorbereitung der Anwendung
+Stellt sicher, dass das Wurzelverzeichnis eurer Anwendung Folgendes enthält:
+
+`Pipfile` und `Pipfile.lock`: Diese Dateien sollten die Abhängigkeiten Ihrer Anwendung definieren.
+Den Code eurer Anwendung: Stellt sicher, dass alle notwendigen Code-Dateien verfügbar sind, um in das Docker-Image 
+kopiert zu werden.
+
+### 2.3. Bauen der Docker-Images
+Navigiert zum Verzeichnis, das eure Dockerfile enthält, und baut euer Docker-Image mit folgendem Befehl:
+
+```bash
+# Build the image for the app
+docker build -f Dockerfile.app -t myapp:latest .
+
+# Build the image for the proxy
+docker build -f Dockerfile.proxy -t myproxy:latest .
+
+```
+
+Dieser Befehl erstellt ein neues Docker-Image mit dem Tag `my-streamlit-web-app` basierend auf den Anweisungen in Ihrer Dockerfile.
+
+### 2.4. Ausführen der Docker-Container
+Sobald das Image gebaut ist, könnt ihr eure Anwendung in einem Docker-Container ausführen:
+
+```bash
+docker run -p 8501:8501 -it --rm --name my-streamlit-web-app my-streamlit-web-app
+```
+
+Dieser Befehl führt Ihre Anwendung in einem neuen Container namens `my-streamlit-web-app` aus und entfernt den Container, 
+wenn er beendet wird. Der -p Parameter leitet den Port 8501 des Containers an den Port 8501 eures Host-Systems weiter. 
+Dies ermöglicht es euch, die Streamlit-Anwendung im Webbrowser unter http://localhost:8501 zu erreichen.
