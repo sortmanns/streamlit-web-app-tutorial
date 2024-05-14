@@ -8,7 +8,7 @@ Fachkräftemangel und Unterfinanzierung.
 Durch die Automatisierung von Routineaufgaben und die Bereitstellung 
 fortschrittlicher Diagnosetools kann KI medizinisches Personal entlasten 
 und die Effizienz steigern. Doch das Entwickeln von Applikationen und das Sammeln von Daten
-ist häufig ein aufwändiges Unterfangen. Dies brachte uns im Rahmen eines nicht profitablen Forschungsprojektes 
+ist häufig ein aufwändiges Unterfangen. Dies brachte uns im Rahmen eines wohltätigen Forschungsprojektes 
 in der Augenheilkunde auf die Frage, wie wir als Data Scientists, möglichst kostengünstig 
 und mit wenig Aufwand eine KI Webapp mit allen nötigen Funktionen einem Mindestmaß an 
 professioneller Sicherheit bereitstellen können.
