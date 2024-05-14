@@ -179,11 +179,12 @@ Die Methode `st.connection('snowflake')` wird in der Wurzel eures Projektes
 unter `.streamlit` nach einer `secrets.toml` suchen. In dieser sollte es dann einen Abschnitt mit
 den Snowflake Credentials geben. Stellt sicher, dass ihr die Credentials nicht ins Remote Repo pusht. Eine potenzielle
 Problemquelle ist das Erstellen der Patienten ID. Diese muss randomisiert gewählt sein und 
-jeder einzelne Eintrag soll eine eigene ID erhalten. Wenn man diese ID allerdings in einem ´with_column´ Statement
+jeder einzelne Eintrag soll eine eigene ID erhalten. Wenn man diese ID allerdings in einem `with_column` Statement
 erzeugt, wird diese pro Session persistiert. Um dies zu umgehen, erstellen wir die ID schon im Formular
-und setzen den ´clear_on_submit´ Parameter auf ´True´. So wird das Formular nach jedem Submit neu geladen und
-die ´generate_id´ Funktion erneut ausgeführt.
+und setzen den `clear_on_submit` Parameter auf `True`. So wird das Formular nach jedem Submit neu geladen und
+die `generate_id` Funktion erneut ausgeführt.
 ```toml
+# secrets.toml
 [connections.snowflake]
 account = "..."
 user = "..."
