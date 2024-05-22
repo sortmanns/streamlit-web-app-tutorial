@@ -8,7 +8,7 @@ import uuid
 from custom_auth import Auth
 
 # Load the YAML file
-with open('/Users/sortmanns/git/work/streamlit-web-app-tutorial/src/.secrets/propelAuthKey.yaml', 'r') as file:
+with open('/src/.secrets/propelAuthKey.yaml', 'r') as file:
     data = yaml.safe_load(file)
 
 api_key = data['api_key']

@@ -13,9 +13,6 @@ COPY package*.json ./
 # Copy the specific proxy module script into the working directory
 COPY src/proxy/proxy.mjs .
 
-# Copy a specific secret key file into the working directory
-COPY src/.secrets/propelAuthKey.yaml .
-
 # Change permissions of the app directory to make everything accessible
 RUN chmod -R 777 /home/node/app
 

@@ -1,5 +1,5 @@
 # Use an official Python runtime as a parent image
-FROM python:3.10-slim
+FROM python:3.10.13
 
 # Copy app code
 COPY src /src
@@ -22,7 +22,10 @@ COPY . .
 # Expose port you want your app on
 EXPOSE 8501
 
+# Set the PYTHONPATH environment variable to include the current directory
+ENV PYTHONPATH="${PYTHONPATH}:/src/streamlit_app"
+
 # Run with multi-stage build considerations (if applicable)
-ENTRYPOINT ["streamlit", "run", "./dhac_streamlit_demo/propel_auth_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+ENTRYPOINT ["pipenv", "run", "streamlit", "run", "./streamlit_app/streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
 
 

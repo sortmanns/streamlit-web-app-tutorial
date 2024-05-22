@@ -433,10 +433,10 @@ COPY . .
 EXPOSE 8501
 
 # Run with multi-stage build considerations (if applicable)
-ENTRYPOINT ["streamlit", "run", "./streamlit_app/streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+ENTRYPOINT ["pipenv", "run", "streamlit", "run", "./streamlit_app/streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
 ```
 
-Als nächstes erstellen wir die Dockerfile für den Proxyserver.
+Als Nächstes erstellen wir die Dockerfile für den Proxyserver.
 
 ```dockerfile
 # Dockerfile.proxy
@@ -455,9 +455,6 @@ COPY package*.json ./
 
 # Copy the specific proxy module script into the working directory
 COPY src/proxy/proxy.mjs .
-
-# Copy a specific secret key file into the working directory
-COPY src/.secrets/propelAuthKey.yaml .
 
 # Change permissions of the app directory to make everything accessible
 RUN chmod -R 777 /home/node/app
@@ -491,6 +488,39 @@ Stellt sicher, dass das Wurzelverzeichnis eurer Anwendung Folgendes enthält:
 Den Code eurer Anwendung: Stellt sicher, dass alle notwendigen Code-Dateien verfügbar sind, um in das Docker-Image 
 kopiert zu werden.
 
+Außerdem müssen die Pfade für die `propelAuthKey.yaml` angepasst werden. Wir wollen die .yaml aus Sicherheitsgründen 
+nicht direkt in den Docker Container verpacken, sondern sie vom lokalen Repository als Volume in den Container mounten.
+So können wir auf den die Secrets zugreifen, ohne sie nach außen zu exponieren. 
+```python
+# src/streamlit_app/streamlit_app.py
+
+# Load the YAML file
+with open('/src/.secrets/propelAuthKey.yaml', 'r') as file:
+    data = yaml.safe_load(file)
+```
+In der `proxy.mjs` müssen wir zusätzlich den Host von `localhost` zu `host.docker.internal` ändern, da Docker uns sonst
+den Zugriff auf den Port verweigert.
+```node
+// src/proxy/proxy.mjs
+
+async function init() {
+  const credentials = await loadCredentialsFromYaml('/src/.secrets/propelAuthKey.yaml');
+
+  // Now initialize your auth proxy with the loaded API key
+    await initializeAuthProxy({
+        authUrl: credentials.authUrl,
+        integrationApiKey: credentials.apiKey,
+        proxyPort: 8000,
+        urlWhereYourProxyIsRunning: 'http://localhost:8000',
+        target: {
+            host: 'host.docker.internal',
+            port: 8501,
+            protocol: 'http:'
+        },
+    });
+}
+```
+
 ### 2.3. Bauen der Docker-Images
 Navigiert zum Verzeichnis, das eure Dockerfile enthält, und baut euer Docker-Image mit folgendem Befehl:
 
@@ -503,15 +533,24 @@ docker build -f Dockerfile.proxy -t myproxy:latest .
 
 ```
 
-Dieser Befehl erstellt ein neues Docker-Image mit dem Tag `my-streamlit-web-app` basierend auf den Anweisungen in Ihrer Dockerfile.
+Diese Befehle erstellen zwei neue Docker-Images mit den Tags `myapp` und `myproxy` basierend auf den Anweisungen 
+in dem jeweiligen Dockerfile.
 
 ### 2.4. Ausführen der Docker-Container
 Sobald das Image gebaut ist, könnt ihr eure Anwendung in einem Docker-Container ausführen:
 
 ```bash
-docker run -p 8501:8501 -it --rm --name my-streamlit-web-app my-streamlit-web-app
+docker run -p 8501:8501 -it --rm \
+    -v /Users/sortmanns/git/work/streamlit-web-app-tutorial/src/.secrets/propelAuthKey.yaml:/app/.secrets/propelAuthKey.yaml \
+    --name myapp myapp
+ 
+docker run -p 8000:8000 -it --rm \
+    -v /Users/sortmanns/git/work/streamlit-web-app-tutorial/src/.secrets/propelAuthKey.yaml:/src/.secrets/propelAuthKey.yaml \
+    --name myproxy myproxy 
 ```
 
-Dieser Befehl führt Ihre Anwendung in einem neuen Container namens `my-streamlit-web-app` aus und entfernt den Container, 
-wenn er beendet wird. Der -p Parameter leitet den Port 8501 des Containers an den Port 8501 eures Host-Systems weiter. 
-Dies ermöglicht es euch, die Streamlit-Anwendung im Webbrowser unter http://localhost:8501 zu erreichen.
+Dieser Befehl führt unsere Anwendungen in einem neuen Container namens `myapp` respektive `myproxy`  aus 
+und entfernt den Container, wenn er beendet wird. Der -p Parameter leitet den Port 8501 des Containers an den Port 8501 
+eures Host-Systems weiter. Dies ermöglicht es euch, die Streamlit-Anwendung im Webbrowser unter 
+http://localhost:8501 zu erreichen. Dort wird uns jedoch der Zugriff verweigert. Wenn wir nun auf http://localhost:8000
+gehen, erscheint unser Login Fenster und nach erfolgreicher Authentifikation werden wir zu unserer App weitergeleitet
