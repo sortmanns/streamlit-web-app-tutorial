@@ -45,7 +45,8 @@ Wir nähern uns diesem Ziel in vier Iterationen.
 4. CI/CD und MLOps zum Einbinden eines ML-Modells
 
 Für jede der vier Iterationen gibt es technische Voraussetzungen, die erfüllt sein müssen. Diese werden jeweils zu 
-Beginn des Kapitels beschrieben.
+Beginn des Kapitels beschrieben. Im Allgemeinen solltet ihr sicherstellen, dass ihr zu den oben genannten Plattformen 
+einen Zugang mit entsprechenden Berechtigungen habt.
 
 ## 1. Lokales Deployment mit Snowflake als Datenbank
 Um diese Iteration bearbeiten zu können, braucht ihr:
@@ -53,8 +54,8 @@ Um diese Iteration bearbeiten zu können, braucht ihr:
 2. einen Propelauth Account
 
 Um uns mit den einzelnen Komponenten vertraut zu machen und später schnell iterieren zu können, ist ein 
-lokales Deployment der beste Weg. So könnt ihr euren Code jederzeit testen und Zeit und Geld sparen. Wir beginnen
-mit der Projektstruktur. Ihr könnt die Dateien entweder gleich anlegen und dann später mit Inhalt füllen, oder sie erst im 
+lokales Deployment der beste Weg. So können wir unseren Code jederzeit testen und Zeit und Geld sparen. Wir beginnen
+mit der Projektstruktur. Wir können die Dateien entweder gleich anlegen und dann später mit Inhalt füllen, oder sie erst im 
 entsprechenden Abschnitt anlegen. Zur Orientierung hier die Struktur von der wir im Folgenden ausgehen.
 ```
 .
@@ -74,9 +75,10 @@ entsprechenden Abschnitt anlegen. Zur Orientierung hier die Struktur von der wir
 └── Pipfile.lock
 ```
 Für die lokale Entwicklung setzen wir zuerst ein Virtual Environment mit Pipenv auf. Eine ausführliche Beschreibung
-wie ihr vorgeht, findet ihr [hier](http://www.rootstrap.com/blog/how-to-manage-your-python-projects-with-pipenv-pyenv). 
-Legt eine Pipfile im Wurzelverzeichnis des Projektes an. 
-Achtet darauf die Abhängigkeiten in der Pipfile im Verlauf des Posts aktuell zu halten.
+wie man vorgeht, findet ihr [hier](http://www.rootstrap.com/blog/how-to-manage-your-python-projects-with-pipenv-pyenv). 
+Zuerst legen wir eine Pipfile im Wurzelverzeichnis des Projektes an. 
+Es ist wichtig die Abhängigkeiten hier aktuell zu halten. Zum einen aus Sicherheitsgründen und zum anderen benötigen
+wir für das spätere Docker-Deployment eine vollständige Liste der Abhängigkeiten.
 ``` [Pipfile]
 # Pipfile
 
@@ -95,7 +97,7 @@ propelauth-py = "==3.1.13"
 [requires]
 python_version = "3.10.13"
 ```
-Legt jetzt die virtuelle Umgebung an.
+Jetzt legen wir die virtuelle Umgebung an.
 ```bash
 pipenv install
 ```
@@ -175,10 +177,11 @@ with st.form(key='my_form', clear_on_submit=True):
         st.dataframe(df.select("*"))
         st.success('Data successfully submitted to Snowflake!')
 ```
-Die Methode `st.connection('snowflake')` wird in der Wurzel eures Projektes
+Die Methode `st.connection('snowflake')` wird in der Wurzel unseres Projektes
 unter `.streamlit` nach einer `secrets.toml` suchen. In dieser sollte es dann einen Abschnitt mit
-den Snowflake Credentials geben. Stellt sicher, dass ihr die Credentials nicht ins Remote Repo pusht. Eine potenzielle
-Problemquelle ist das Erstellen der Patienten ID. Diese muss randomisiert gewählt sein und 
+den Snowflake Credentials geben. Es ist wichtig sicherzustellen, dass wir die Zugangsdaten nicht ins Remote Repository
+hochladen, da sonst unsere Sicherheit kompromittiert wird. Eine weitere potenzielle Problemquelle ist das Erstellen der
+Patienten IDs. Diese muss randomisiert gewählt sein und 
 jeder einzelne Eintrag soll eine eigene ID erhalten. Wenn man diese ID allerdings in einem `with_column` Statement
 erzeugt, wird diese pro Session persistiert. Um dies zu umgehen, erstellen wir die ID schon im Formular
 und setzen den `clear_on_submit` Parameter auf `True`. So wird das Formular nach jedem Submit neu geladen und
@@ -196,31 +199,32 @@ database = "..."
 schema = "..."
 client_session_keep_alive = true
 ```
-Im besten Fall legt euch euer Snowflake Admin einen technischen Nutzer für
-die App an, um das Prinzip der geringsten Privilegien umzusetzen. Legt in Snowflake ein Schema an, für das euer 
-technischer Nutzer die nötigen Rechte hat.
+Im besten Fall legt uns unser Snowflake Admin einen technischen Nutzer für
+die App an, um das Prinzip der geringsten Privilegien umzusetzen. Dann legen wir in der Snowflake ein Schema an, in dem
+unsere Tabellen liegen sollen.
 </br></br>
-Startet die Streamlit App jetzt mit folgendem Befehl.
+Wir starten die Streamlit App jetzt mit folgendem Befehl.
 ```bash
 pipenv run streamlit run src/streamlit_app/streamlit_app.py
 ```
-Drückt den Submitbutton und stellt sicher, dass eine entsprechende Zeile in die Datenbank geschrieben wurde.
+Wir drücken den Submitbutton und überprüfen, dass eine entsprechende Zeile in die Datenbank geschrieben wurde.
 ### 1.2 Authentifikation und Nutzermanagement
 Für State-of-the-Art Authentifikation setzen wir auf einen Proxyserver und Propelauth
 als Identity Provider und Nutzermanagement Tool. Für ein detailliertes Tutorial zu 
 Streamlit und Propelauth verweisen wir auf diesen [Blogpost](https://www.propelauth.com/post/streamlit-authentication). Wir werden die einzelnen 
 Schritte ein wenig zusammenfassen und näher darauf eingehen, den API-Key von einer YAML Datei einzulesen. 
-Dies ermöglicht euch den Key lokal zu speichern, ohne ihn in das Remote Repo zu pushen.
+Dies ermöglicht uns den Key lokal zu speichern, ohne ihn in das Remote Repo zu pushen.
 Außerdem brauchen wir dieses Feature später beim Cloud Deployment.
 </br></br>
-Im ersten Schritt besucht ihr die Propelauth Website und erstellt einen Account. Folgt dann den
-Anweisungen zum Erstellen eines Projektes. Danach initialisiert ihr ein Node Projekt in eurem 
-Wurzelverzeichnis mit dem Befehl 
+Im ersten Schritt besuchen wir die Propelauth Website und erstellen einen Account. Wir folgen den
+Anweisungen zum Erstellen eines Projektes. Um einen Proxyserver erstellen zu können, initialisieren wir ein Node Projekt 
+in unserem Wurzelverzeichnis.
 ```bash
 npm i @propelauth/auth-proxy
+npm install js-yaml
 ```
-Als Nächstes legt unter `src` einen Ordner `proxy`an und in diesem eine Datei `proxy.mjs`.
-Anstatt den API-Key hier direkt anzugeben, lesen wir diesen von einer YAML ein. Legt dazu in eurem `src` Verzeichnis 
+Als Nächstes legen wir unter `src` einen Ordner `proxy`an und in diesem eine Datei `proxy.mjs`.
+Anstatt den API-Key hier direkt anzugeben, lesen wir diesen von einer YAML ein. Dazu legen wir in unserem `src` Verzeichnis 
 einen Ordner `.secrets` an und in diesem eine Datei `propelAuthKey.yaml` mit folgendem Inhalt.
 ```yaml
 # src/.secrets/propelAuthKey.yaml
@@ -228,7 +232,7 @@ einen Ordner `.secrets` an und in diesem eine Datei `propelAuthKey.yaml` mit fol
 api_key: <your-key-here>
 auth_url: <your-url-here>
 ```
-Erstellt eure `proxy.mjs` dann wie folgt.
+Wir erstellen jetzt unsere `proxy.mjs` wie folgt.
 ```node
 // src/proxy/proxy.mjs
 
@@ -272,7 +276,7 @@ async function init() {
 init();
 ```
 Nun erweitern wir unsere Streamlit App um Methoden zur Authentifikation. Dazu nutzen wir das `propelauth_py` Packet.
-Erstellt ein Modul `customs_auth.py` mit den nötigen Funktionen.
+Wir erstellen dazu ein Modul `customs_auth.py` mit den nötigen Funktionen.
 ```python
 # src/streamlit_app/customs_auth.py
 
@@ -340,8 +344,8 @@ def get_cookie(cookie_name):
 
     return None
 ```
-Nun importiert die entsprechenden Klassen das Streamlit Skript und lest die nötigen Credentials
-aus der YAML ein. Erweitert dazu den oberen Teil des Skripts.
+Nun importieren wir die entsprechenden Klassen das Streamlit Skript und lesen die nötigen Credentials
+aus der YAML ein. Zu diesem Zweck erweitern den oberen Teil des Skripts.
 ```python
 # src/streamlit_app/streamlit_app.py
 
@@ -375,31 +379,26 @@ conn = st.connection('snowflake')
 session = conn.session()
 ...
 ```
-Je nachdem wie ihr den Code ausführt, kann es sein, dass ihr den `src` Order zum
-Python Pfad hinzufügen müsst, damit das `custom_auth` Modul gefunden wird.
-Führt nun folgende Befehle zum Initialisieren eures Node Projektes aus.
-```bash
-npm i @propelauth/auth-proxy
-npm install js-yaml
-```
-Startet eure Streamlit App, wie gewohnt. Ihr solltet jetzt im Browser die Meldung `Unauthorized`
-sehen. Öffnet ein zusätzliches Fenster im Terminal und startet euren Node Proxyserver.
+Je nachdem wie wir den Code ausführen, kann es sein, dass wir den `src` Order zum
+Python Pfad hinzufügen müssen, damit das `custom_auth` Modul gefunden wird.
+Wir starten unsere Streamlit App wie gewohnt. Jetzt sollte im Browser die Meldung `Unauthorized`
+zu sehen sein. Danach öffnen wir ein zusätzliches Fenster im Terminal und starten unseren Node Proxyserver.
 ```bash
 node src/proxy/proxy.mjs
 ```
-Geht jetzt im Browser auf `localhost:8000`. Ihr seht nun euren Login Screen von Propelauth.
-Authentifiziert euch, um zu eurer Streamlit App weitergeleitet zu werden.
+Wir besuchen jetzt im Browser `http://localhost:8000`. Wir sehen jetzt unseren Login Screen von Propelauth und
+authentifizieren uns, um zu unserer Streamlit App weitergeleitet zu werden.
 
 ## 2. Lokales Docker Deployment mit Snowflake als Datenbank
-Um diese Iteration bearbeiten zu können, braucht ihr:
+Um diese Iteration bearbeiten zu können, brauchen wir:
 1. einen Snowflake Account
 2. einen Propelauth Account
 3. Docker
 
 Im Wesentlichen erweitern wir unser Repository nur um drei Dateien, die uns ermöglichen unsere App in zwei Docker
 Container zu verpacken. Die Verwendung von pipenv in Docker hilft, Konsistenz zwischen Entwicklungs- und 
-Produktionsumgebungen zu bewahren und nutzt die Vorteile von Docker, während ihr die Funktionen zur Verwaltung von 
-Abhängigkeiten und virtuellen Umgebungen von pipenv genießt.
+Produktionsumgebungen zu bewahren und nutzt die Vorteile von Docker, während wir die Funktionen zur Verwaltung von 
+Abhängigkeiten und virtuellen Umgebungen von pipenv genießen.
 
 ### 2.1 Erstellen der Dockerfiles
 Zuerst müssen wir die Dockerfiles erstellen, die die Umgebung für unsere Anwendungen definieren. Wir starten mit der
@@ -482,10 +481,10 @@ die korrekten Berechtigungen zu gewährleisten und Abhängigkeiten zu verwalten,
 eines Nicht-Root-Benutzers sicher gehalten wird.
 
 ### 2.2. Vorbereitung der Anwendung
-Stellt sicher, dass das Wurzelverzeichnis eurer Anwendung Folgendes enthält:
+Wir stellen sicher, dass das Wurzelverzeichnis unserer Anwendung Folgendes enthält:
 
-`Pipfile` und `Pipfile.lock`: Diese Dateien sollten die Abhängigkeiten Ihrer Anwendung definieren.
-Den Code eurer Anwendung: Stellt sicher, dass alle notwendigen Code-Dateien verfügbar sind, um in das Docker-Image 
+`Pipfile` und `Pipfile.lock`: Diese Dateien sollten die Abhängigkeiten unserer Anwendung definieren.
+Was den Code anbelangt stellen wir sicher, dass alle notwendigen Code-Dateien verfügbar sind, um in das Docker-Image 
 kopiert zu werden.
 
 Außerdem müssen die Pfade für die `propelAuthKey.yaml` angepasst werden. Wir wollen die .yaml aus Sicherheitsgründen 
@@ -522,7 +521,7 @@ async function init() {
 ```
 
 ### 2.3. Bauen der Docker-Images
-Navigiert zum Verzeichnis, das eure Dockerfile enthält, und baut euer Docker-Image mit folgendem Befehl:
+Wir Navigieren nun zum Verzeichnis, das unsere Dockerfile enthält, und bauen unser Docker-Image.
 
 ```bash
 # Build the image for the app
@@ -537,7 +536,7 @@ Diese Befehle erstellen zwei neue Docker-Images mit den Tags `myapp` und `myprox
 in dem jeweiligen Dockerfile.
 
 ### 2.4. Ausführen der Docker-Container
-Sobald das Image gebaut ist, könnt ihr eure Anwendung in einem Docker-Container ausführen:
+Sobald das Image gebaut ist, können wir unsere Anwendung in einem Docker-Container ausführen.
 
 ```bash
 docker run -p 8501:8501 -it --rm \
@@ -549,8 +548,10 @@ docker run -p 8000:8000 -it --rm \
     --name myproxy myproxy 
 ```
 
-Dieser Befehl führt unsere Anwendungen in einem neuen Container namens `myapp` respektive `myproxy`  aus 
-und entfernt den Container, wenn er beendet wird. Der -p Parameter leitet den Port 8501 des Containers an den Port 8501 
-eures Host-Systems weiter. Dies ermöglicht es euch, die Streamlit-Anwendung im Webbrowser unter 
+Diese Befehle führen unsere Anwendungen in einem neuen Container namens `myapp`, respektive `myproxy`,  aus 
+und entfernen die Container, wenn sie beendet werden. Der -p Parameter leitet den Port des Containers an den Port  
+eures Host-Systems weiter. Dies ermöglicht es uns, die Streamlit-Anwendung im Webbrowser unter 
 http://localhost:8501 zu erreichen. Dort wird uns jedoch der Zugriff verweigert. Wenn wir nun auf http://localhost:8000
-gehen, erscheint unser Login Fenster und nach erfolgreicher Authentifikation werden wir zu unserer App weitergeleitet
+navigieren, erscheint unser Login Fenster und nach erfolgreicher Authentifikation werden wir zu unserer App weitergeleitet.
+Der -v Parameter mountet den angegebenen Pfad als Volume in den entsprechen Pfad in unserem Container. So können wir auf
+die .yaml Datei mit den Zugangsdaten zugreifen, ohne diese direkt in das Docker Image zu verpacken.
