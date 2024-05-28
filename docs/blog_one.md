@@ -1,4 +1,4 @@
-# Wie baue ich mit Streamlit eine Webapp für KI gestützte Entscheidungshilfen im Gesundheitswesen?
+# Wie baue ich mit Streamlit eine gesicherte Webapp für KI gestützte Entscheidungshilfen?
 In einer Welt, in der die Digitalisierung in allen Lebensbereichen zunehmend 
 an Bedeutung gewinnt, ist das Gesundheitswesen kein Ausnahmefall. 
 Der Einsatz von künstlicher Intelligenz (KI) im Gesundheitswesen verspricht, 
